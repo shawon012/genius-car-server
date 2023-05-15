@@ -1,21 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 // const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
 
-// username: shawonshakib01
-// password: CQmp0zZ6F2BT0yGh
+
 // middleware
 app.use(cors());
 app.use(express.json());
 
 
 
-const uri = "mongodb+srv://shawonshakib01:CQmp0zZ6F2BT0yGh@cluster0.lczeaqj.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lczeaqj.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -47,7 +46,7 @@ async function run() {
         await client.connect();
 
         const serviceCollection = client.db('carDoctor').collection('serveces');
-        const bookengCollection = client.db('carDoctor').collection('bookings');
+        const bookingCollection = client.db('carDoctor').collection('bookings');
 
         // jwt
         app.post('/jwt', (req, res) =>{
@@ -91,14 +90,14 @@ async function run() {
             if(req.query?.email){
                 query = { email: req.query.email }
             }
-            const result = await bookengCollection.find(query).toArray();
+            const result = await bookingCollection.find(query).toArray();
             res.send(result);
         })
 
         app.post('/bookings', async(req, res) =>{
             const booking = req.body;
             console.log(booking);
-            const result = await bookengCollection.insertOne(booking);
+            const result = await bookingCollection.insertOne(booking);
             res.send(result);
         });
 
@@ -112,14 +111,14 @@ async function run() {
                     status: updateBooking.status
                 },
             };
-            const result = await bookengCollection.updateOne(filter, updateDoc);
+            const result = await bookingCollection.updateOne(filter, updateDoc);
             res.send(result);
         })
 
         app.delete('/bookings/:id', async (req, res) =>{
             const id = req.params.id;
             const query = {_id: new ObjectId(id)}
-            const result = await bookengCollection.deleteOne(query);
+            const result = await bookingCollection.deleteOne(query);
             res.send(result);
         })
 
@@ -134,3 +133,10 @@ async function run() {
 run().catch(console.dir);
 
 
+app.get('/', (req, res) => {
+    res.send('doctor is running')
+})
+
+app.listen(port, () =>{
+    console.log(`Car doctor is running on port ${port}`)
+})
